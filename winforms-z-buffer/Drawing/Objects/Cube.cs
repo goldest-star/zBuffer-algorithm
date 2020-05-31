@@ -13,7 +13,8 @@ namespace winforms_z_buffer
     public class Cube
     {
 
-        public Color Color;
+        public Color EdgeColor;
+        public Color FaceColor;
 
         public Point3D[] Vertices;
         Point3D center;
@@ -26,33 +27,33 @@ namespace winforms_z_buffer
                 {
                     new Triangle[]
                     {
-                        new Triangle(Vertices[0], Vertices[1], Vertices[2], Color),
-                        new Triangle(Vertices[1], Vertices[2], Vertices[3], Color)
+                        new Triangle(Vertices[0], Vertices[1], Vertices[2], EdgeColor, FaceColor),
+                        new Triangle(Vertices[1], Vertices[2], Vertices[3], EdgeColor, FaceColor)
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[4], Vertices[5], Vertices[6], Color),
-                        new Triangle(Vertices[5], Vertices[6], Vertices[7], Color)
+                        new Triangle(Vertices[4], Vertices[5], Vertices[6], EdgeColor, FaceColor),
+                        new Triangle(Vertices[5], Vertices[6], Vertices[7], EdgeColor, FaceColor)
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[0], Vertices[4], Vertices[1], Color),
-                        new Triangle(Vertices[5], Vertices[4], Vertices[1], Color)
+                        new Triangle(Vertices[0], Vertices[4], Vertices[1], EdgeColor, FaceColor),
+                        new Triangle(Vertices[5], Vertices[4], Vertices[1], EdgeColor, FaceColor)
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[3], Vertices[5], Vertices[7], Color),
-                        new Triangle(Vertices[3], Vertices[5], Vertices[1], Color)
+                        new Triangle(Vertices[3], Vertices[5], Vertices[7], EdgeColor, FaceColor),
+                        new Triangle(Vertices[3], Vertices[5], Vertices[1], EdgeColor, FaceColor)
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[2], Vertices[6], Vertices[3], Color),
-                        new Triangle(Vertices[7], Vertices[6], Vertices[3], Color)
+                        new Triangle(Vertices[2], Vertices[6], Vertices[3], EdgeColor, FaceColor),
+                        new Triangle(Vertices[7], Vertices[6], Vertices[3], EdgeColor, FaceColor)
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[2], Vertices[6], Vertices[4], Color),
-                        new Triangle(Vertices[2], Vertices[0], Vertices[4], Color)
+                        new Triangle(Vertices[2], Vertices[6], Vertices[4], EdgeColor, FaceColor),
+                        new Triangle(Vertices[2], Vertices[0], Vertices[4], EdgeColor, FaceColor)
                     },
                 };
 
@@ -60,23 +61,17 @@ namespace winforms_z_buffer
             }
         }
 
-        public Cube(Point3D[] vertices, Color color)
+        public Cube(Point3D[] vertices, Color eColor, Color fColor)
         {
             Vertices = vertices;
-            Color = color;
+            EdgeColor = eColor;
+            FaceColor = fColor;
             center = findCenter(vertices);
-        }
-
-        public Cube(Cube cube, double angleX, double angleY)
-        {
-            Vertices = cube.Vertices;
-            Color = cube.Color;
-            center = findCenter(cube.Vertices);
         }
 
         #region statics
 
-        public static Cube UnitCube(Color color)
+        public static Cube UnitCube(Color eColor, Color fColor)
         {
             Point3D[] vertices = {
                 new Point3D(-1, -1, -1), new Point3D(-1, -1, 1), new Point3D(-1, 1, -1),
@@ -84,7 +79,7 @@ namespace winforms_z_buffer
                 new Point3D(1, 1, -1), new Point3D(1, 1, 1)
             };
 
-            return new Cube(vertices, color);
+            return new Cube(vertices, eColor, fColor);
         }
 
         public static int[][] UnitCubeEdgePairs()
@@ -194,75 +189,6 @@ namespace winforms_z_buffer
 
             for (int i = 0; i < 8; i++)
                 Vertices[i] = Vertices[i] + (Vector3D)center;
-        }
-
-        #endregion
-
-        #region methods-draw
-
-        //public Point[][] DrawPoints(double angle = 0)
-        //{
-        //    var cSides = Sides;
-
-        //    var points = new Point[cSides.Length * 6][];
-
-        //    for (int i = 0; i < cSides.Length; i++)
-        //        for (int j = 0; j < cSides[i].Length; j++)
-        //        {
-        //            Array.Copy(cSides[i][j].TriangleScreenPoints(angle), 0, points, i * 6 + j * 3, 3);
-        //        }
-
-        //    return points;
-        //}
-
-        //public Point[][] GetDrawPoints2DFromTriangles()
-        //{
-        //    var cSides = Sides;
-
-        //    var points = new Point[cSides.Length * 6][];
-
-        //    for (int i = 0; i < cSides.Length; i++)
-        //        for (int j = 0; j < cSides[i].Length; j++)
-        //        {
-        //            Array.Copy(cSides[i][j].GetVertexPairsAsPoints(), 0, points, i * 6 + j * 3, 3);
-        //        }
-
-        //    return points;
-        //}
-
-        public Point[][] GetDrawPoints2D()
-        {
-            var points = new Point[12][];
-
-            foreach (var (edge, index) in UnitCubeEdgePairs().WithIndex())
-            {
-                Point3D xy1 = Vertices[edge[0]];
-                Point3D xy2 = Vertices[edge[1]];
-
-                points[index] = new Point[2]
-                {
-                    new Point((int)Math.Round(xy1.X), (int)Math.Round(xy1.Y)),
-                    new Point((int)Math.Round(xy2.X), (int)Math.Round(xy2.Y))
-                };
-            }
-
-            return points;
-        }
-
-        public Point3D[][] GetDrawPoints3D()
-        {
-            var points = new Point3D[12][];
-
-            foreach (var (edge, index) in UnitCubeEdgePairs().WithIndex())
-            {
-                points[index] = new Point3D[2]
-                {
-                    Vertices[edge[0]],
-                    Vertices[edge[1]]
-                };
-            }
-
-            return points;
         }
 
         #endregion

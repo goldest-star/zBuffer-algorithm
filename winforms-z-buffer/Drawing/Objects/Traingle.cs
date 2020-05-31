@@ -6,19 +6,21 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Windows.Media.Media3D;
-
+using winforms_z_buffer.Utils;
 
 namespace winforms_z_buffer
 {
     public class Triangle
     {
         public Point3D[] Vertices;
-        public Color Color;
+        public Color EdgeColor;
+        public Color FaceColor;
 
-        public Triangle(Point3D v1, Point3D v2, Point3D v3, Color color)
+        public Triangle(Point3D v1, Point3D v2, Point3D v3, Color eColor, Color fColor)
         {
             Vertices = new Point3D[3] { v1, v2, v3 };
-            Color = color;
+            EdgeColor = eColor;
+            FaceColor = fColor;
         }
 
         public void Translate(Vector3D displacement)
@@ -43,80 +45,17 @@ namespace winforms_z_buffer
             };
         }
         
-        Matrix3D getProjectionMatrix()
+        Point3D[] getPerspective(Point3D[] set, int len = 3)
         {
-            double near = 0.001;
-            double far = 1000;
-            double fn = far - near;
-            double fov = Math.PI / 2;
-            double fovRad = 1 / Math.Tan(fov * 0.5);
+            var points = new Point3D[len];
 
-            Matrix3D matrix = new Matrix3D(
-                    fovRad, 0,      0,      0,
-                    0,      fovRad, 0,      0,
-                    0,      0,      far/fn, -far * near / fn,
-                    0,      0,      1,      0
-                );
-
-            return matrix;
-        }
-
-        Matrix3D getRotationXMatrix(double angle)
-        {
-            double cos = Math.Cos(angle * 0.5);
-            double sin = Math.Sin(angle * 0.5);
-
-            Matrix3D matrix = new Matrix3D(
-                    1, 0,   0,      0,
-                    0, cos, -sin,   0,
-                    0, sin, cos,    0,
-                    0, 0,   0,      1
-                );
-
-            return matrix;
-        }
-
-        Matrix3D getRotationZMatrix(double angle)
-        {
-            double cos = Math.Cos(angle);
-            double sin = Math.Sin(angle);
-
-            Matrix3D matrix = new Matrix3D(
-                    cos,    -sin,   0, 0,
-                    sin,    cos,    0, 0,
-                    0,      0,      1, 0,
-                    0,      0,      0, 1
-                );
-
-            return matrix;
-        }
-
-        void multiplyAndNormalize(ref Point4D point, Matrix3D matrix)
-        {
-            matrix.MultiplyPoint(ref point);
-            
-            if (point.W != 0)
-            {
-                point.X /= point.W;
-                point.Y /= point.W;
-                point.Z /= point.W;
-            }
-        }
-
-        Point3D[] getPerspective()
-        {
-            var points = new Point3D[3];
-
-            foreach (var (v, i) in Vertices.WithIndex())
+            foreach (var (v, i) in set.WithIndex())
             {
                 Point4D point = (Point4D)v;
 
-                multiplyAndNormalize(ref point, getRotationZMatrix(0));
-                multiplyAndNormalize(ref point, getRotationXMatrix(0));
-
                 point.Z += 100;
 
-                multiplyAndNormalize(ref point, getProjectionMatrix());
+                Camera.Instance.GetProjectionMatrix().MultiplyAndNormalizePoint(ref point);
 
                 points[i] = (Point3D)point;
             }
@@ -124,19 +63,19 @@ namespace winforms_z_buffer
             return points;
         }
 
-        public Point[][] TriangleEdgeScreenPointsAsPoint(double angle = 0)
+        public Point[][] TriangleEdgeScreenPointsAsPoint()
         {
-            return createVertexPairs<Point>(getPerspective());
+            return createVertexPairs<Point>(getPerspective(Vertices));
         }
 
         public Point3D[][] TriangleEdgeScreenPointsAsPoint3D()
         {
-            return createVertexPairs<Point3D>(getPerspective());
+            return createVertexPairs<Point3D>(getPerspective(Vertices));
         }
 
         public Point3D[] TriangleVertexScreenPointsAsPoint3D()
         {
-            return getPerspective();
+            return getPerspective(Vertices);
         }
     }
 }

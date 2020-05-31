@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,18 +12,33 @@ namespace winforms_z_buffer
 {
     public class Drawing
     {
-        ZBuffer zBuffer = new ZBuffer(new Size(800, 800));
+        ZBuffer zBuffer;
         Graphics graphics;
+        Bitmap bmp;
+
+        Size w;
 
         bool drawBorders;
         bool drawFill;
 
-        public Drawing(Graphics g, bool drawBorders, bool drawFill)
+        public Drawing(Graphics g, Size windowSize, bool drawBorders, bool drawFill)
         {
             graphics = g;
+            zBuffer = new ZBuffer(windowSize);
             this.drawBorders = drawBorders;
             this.drawFill = drawFill;
+            w = windowSize;
         }
+        public Drawing(Bitmap bmp, Size windowSize, bool drawBorders, bool drawFill)
+        {
+            this.bmp = bmp;
+            zBuffer = new ZBuffer(windowSize);
+            this.drawBorders = drawBorders;
+            this.drawFill = drawFill;
+            w = windowSize;
+        }
+
+        public Bitmap GetResult() { return bmp; }
 
         public void Draw(Cube c)
         {
@@ -33,44 +49,45 @@ namespace winforms_z_buffer
 
         public void DrawTriangle(Triangle t)
         {
-            if (drawBorders)
-                foreach (var edge in t.TriangleEdgeScreenPointsAsPoint3D())
-                    drawTriangleEdges(edge);
+            if (!drawFill && !drawBorders)
+                return;
+
+            var points = t.TriangleVertexScreenPointsAsPoint3D();
 
             if (drawFill)
-                drawTriangleFill(t.TriangleVertexScreenPointsAsPoint3D());
+                drawTriangleFill(points, t.FaceColor);
+
+            if (drawBorders)
+                drawTriangleEdges(points, t.EdgeColor);
         }
 
-        void drawTriangleEdges(Point3D[] edge)
-        {
-            foreach (var p in Line.GetPoints(edge[0], edge[1]))
-            {
-                if (!(bool)zBuffer[p.X, p.Y, p.Z])
-                    continue;
-
-                zBuffer[p.X, p.Y, double.NaN] = p.Z;
-
-                graphics.FillRectangle(Brushes.White, Ut.F(p.X), Ut.F(p.Y), 1, 1);
-            }
-        }
-
-        void drawTriangleFill(Point3D[] vertices)
+        void drawTriangleEdges(Point3D[] vertices, Color color)
         {
             var points = new List<Point3D> { vertices[0], vertices[1], vertices[2] };
 
-            foreach (var p in Fill.FillTriange(points))
-            {
 
-                if (!(bool)zBuffer[p.X, p.Y, 0])
-                    continue;
+            foreach (var p in Line.OutlineTriangle(points))
+                drawPoint(p, color);
+        }
 
-                zBuffer[p.X, p.Y, double.NaN] = 0.0d;
+        void drawTriangleFill(Point3D[] vertices, Color color)
+        {
+            var points = new List<Point3D> { vertices[0], vertices[1], vertices[2] };
 
-                graphics.FillRectangle(Brushes.White, Ut.F(p.X), Ut.F(p.Y), 1, 1);
-            }
+            foreach (var p in Fill.FillTriangle(points))
+                drawPoint(p, color);
+        }
 
-            // graphics.FillPolygon(Brushes.Blue, points);
+        void drawPoint(Point3D point, Color color)
+        {
+            var p2D = (Point)point;
 
+            if (zBuffer[p2D] <= point.Z)
+                return;
+
+            zBuffer[p2D] = point.Z;
+
+            bmp.SetPixelFast(p2D.X + w.Width / 2, p2D.Y + w.Height / 2, color);
 
         }
     }

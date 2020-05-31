@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Media.Media3D;
 
@@ -15,54 +8,85 @@ namespace winforms_z_buffer
 {
     public partial class Display : Form
     {
-        Cube[] cubes = null;
+        List<Cube> cubes = new List<Cube>();
         Cube CSO;
+
+        PictureBox pb;
 
         public Display()
         {
             // Setup Winform
             Width = Height = 800;
             StartPosition = FormStartPosition.CenterScreen;
+
             SetStyle(
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.UserPaint |
                 ControlStyles.DoubleBuffer,
                 true);
 
-            CSO = Cube.UnitCube(Color.PaleGoldenrod);
-            CSO.Rescale(0.1, 0.1, 0.1);
+            pb = new PictureBox
+            {
+                Name = "pb",
+                Size = Size,
+                Location = new Point(0, 0),
+                Dock = DockStyle.Fill
+            };
+            Controls.Add(pb);
 
-            // Create Cubes
-            Cube c1 = Cube.UnitCube(Color.Red);
+            // Camera setup
+            new Camera(/*fov, near, far : set to default*/);
+
+            initializeCubes();
+
+            OnPaint(null);
+        }
+
+        void initializeCubes()
+        {
+            // Coordinate System Origin
+            CSO = Cube.UnitCube(Color.White, Color.Transparent);
+            CSO.Rescale(0, 0, 0);
+            cubes.Add(CSO);
+
+            // Cubes
+            Cube c1 = Cube.UnitCube(Color.DarkRed, Color.Red);
             c1.Rescale(10, 5, 2);
-            // c1.Translate(new Vector3D(10, 10, -3));
+            c1.RotateAroundLocalAxis(0, - Math.PI / 3, - Math.PI / 9);
+            c1.Translate(new Vector3D(10, 10, -3));
+            cubes.Add(c1);
 
-            //Cube c2 = Cube.UnitCube(Color.Blue);
-            //c2.Rescale(5, 5, 5);
-            //c2.Translate(new Vector3D(-10, 5, -2));
+            Cube c2 = Cube.UnitCube(Color.DarkBlue, Color.Blue);
+            c2.Rescale(5, 5, 5);
+            c2.RotateAroundLocalAxis(0, Math.PI / 4, Math.PI / 12);
+            c2.Translate(new Vector3D(-10, 5, -2));
+            cubes.Add(c2);
 
+            Cube c3 = Cube.UnitCube(Color.DarkGreen, Color.Green);
+            c3.Rescale(15, 1, 1);
+            c3.Translate(new Vector3D(0, -15, 0));
+            c3.RotateAroundOrigin(Math.PI / 3, Math.PI / 8, 0);
+            cubes.Add(c3);
 
-
-            cubes = new Cube[] { CSO, c1, };
+            Cube c4 = Cube.UnitCube(Color.Purple, Color.Magenta);
+            c4.Rescale(15, 15, 15);
+            c4.Translate(new Vector3D(-15, -15, -15));
+            c4.RotateAroundOrigin(Math.PI / 7, 0, Math.PI / 64);
+            cubes.Add(c4);
         }
 
         protected override void OnPaint(PaintEventArgs args)
         {
-            var g = args.Graphics;
-            g.SmoothingMode = SmoothingMode.HighQuality;
-            g.Clear(Color.Black);
+            Bitmap bmp = new Bitmap(Width, Height);
+            var gr = Graphics.FromImage(bmp);
+            gr.Clear(Color.Black);
 
-            // Move coordinate origin to center
-            g.TranslateTransform(Width / 2, Height / 2);
+            var drawing = new Drawing(bmp, Size, /*draw edges*/false, /*draw faces*/true);
 
-            // Mark coordinate origin
-            g.FillEllipse(Brushes.Purple, -4, -4, 8, 8);
+            foreach (var c in cubes)
+                drawing.Draw(c);
 
-            var drawing = new Drawing(g, true, true);
-
-            if (cubes != null)
-                foreach (var c in cubes)
-                    drawing.Draw(c);
+            pb.Image = drawing.GetResult();
         }
 
         void TranslateCubes(Vector3D displacement)
@@ -91,11 +115,14 @@ namespace winforms_z_buffer
             switch (keyData)
             {
                 case Keys.R:
-                    Refresh();
+                    OnPaint(null);
                     break;
+                case (Keys.R | Keys.Control):
+                    initializeCubes();
+                    new Camera();
+                    goto case Keys.R;
 
                 // Translation
-
                 case Keys.Right:
                     TranslateCubes(new Vector3D(-standardSpeed, 0, 0));
                     goto case Keys.R;
@@ -136,7 +163,6 @@ namespace winforms_z_buffer
                     goto case Keys.R;
 
                 // Rotation
-
                 case Keys.W:
                     RotateCubes(0, standardSpeed * rotationStep, 0);
                     goto case Keys.R;
@@ -189,9 +215,15 @@ namespace winforms_z_buffer
                 case (Keys.Oemcomma | Keys.Control):
                     ScaleCubes(0.5);
                     goto case Keys.R;
-            }
 
-            // Refresh();
+                // Camera
+                case Keys.D1:
+                    Camera.Instance.ChangeFOV(Math.PI / 12);
+                    goto case Keys.R;
+                case Keys.D2:
+                    Camera.Instance.ChangeFOV(-Math.PI / 12);
+                    goto case Keys.R;
+            }
 
             return base.ProcessCmdKey(ref msg, keyData);
         }

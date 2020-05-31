@@ -5,6 +5,21 @@ namespace System.Windows.Media.Media3D
 
     public partial struct Matrix3D
     {
+        // Custom
+
+        public void MultiplyAndNormalizePoint(ref Point4D point)
+        {
+            this.MultiplyPoint(ref point);
+
+            if (point.W != 0)
+            {
+                point.X /= point.W;
+                point.Y /= point.W;
+                point.Z /= point.W;
+            }
+        }
+
+
         //------------------------------------------------------
         //
         //  Constructors

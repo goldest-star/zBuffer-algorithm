@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Media.Media3D;
@@ -6,174 +7,144 @@ using winforms_z_buffer.Utils;
 
 namespace winforms_z_buffer
 {
-
-    public struct ActiveEdgeTableEntry
-    {
-        public double yMax;
-        public double yMin;
-        public double mInv;
-        public double xOfMin;
-        public double xOfMax;
-
-        public ActiveEdgeTableEntry(Point start, Point end)
-        {
-            Point lower = start.Y > end.Y ? end : start;
-            Point higher = start.Y > end.Y ? start : end;
-
-            yMax = higher.Y;
-            yMin = lower.Y;
-            xOfMax = higher.X;
-            xOfMin = lower.X;
-            mInv = (xOfMax - xOfMin) / (yMax - yMin);
-        }
-
-        public ActiveEdgeTableEntry(ActiveEdgeTableEntry aete)
-        {
-            yMax = aete.yMax;
-            yMin = aete.yMin;
-            xOfMax = aete.xOfMax;
-            xOfMin = aete.xOfMin + aete.mInv;
-            mInv = aete.mInv;
-        }
-
-    }
     public static class Fill
+    // Source https://www.davrous.com/2013/06/21/tutorial-part-4-learning-how-to-write-a-3d-software-engine-in-c-ts-or-js-rasterization-z-buffering/
     {
-        public static List<Point> GetPoints(List<Point> pVertices)
-        {
-            List<Point> vertices = new List<Point>();
-            List<KeyValuePair<int, int>> indicies = new List<KeyValuePair<int, int>>();
-            List<ActiveEdgeTableEntry> AET = new List<ActiveEdgeTableEntry>();
-
-            var dict = new Dictionary<int, int>();
-
-            for (int l = 0; l < pVertices.Count; l++)
-            {
-                vertices.Add(pVertices[l]);
-                dict.Add(l, pVertices[l].Y);
-            }
-
-            indicies = dict.OrderBy(x => x.Value).ToList();
-
-            var points = new List<Point>();
-
-            int k = 0;
-            int i = indicies[k].Key;
-            int y, ymin;
-            y = ymin = vertices[indicies[0].Key].Y;
-            int ymax = vertices[indicies[indicies.Count - 1].Key].Y;
-
-            int len = vertices.Count;
-
-            while (y < ymax)
-            {
-                while (vertices[i].Y == y)
-                {
-                    if (vertices[(i - 1 + len) % len].Y > vertices[i].Y)
-                        AET.Add(new ActiveEdgeTableEntry(vertices[i], vertices[(i - 1 + len) % len]));
-
-                    if (vertices[(i + 1) % len].Y > vertices[i].Y)
-                        AET.Add(new ActiveEdgeTableEntry(vertices[i], vertices[(i + 1) % len]));
-
-                    i = indicies[++k].Key;
-                }
-
-                AET.Sort(delegate (ActiveEdgeTableEntry e1, ActiveEdgeTableEntry e2)
-                {
-                    return e1.xOfMin.CompareTo(e2.xOfMin);
-                });
-
-                for (int t = 0; t < AET.Count; t += 2)
-                    for (int x1 = (int)AET[t].xOfMin; x1 <= AET[(t + 1) % AET.Count].xOfMin; x1++)
-                    {
-                        points.Add(new Point(x1, y));
-                    }
-
-                ++y;
-                for (int t = 0; t < AET.Count; t++)
-                {
-                    AET[t] = new ActiveEdgeTableEntry(AET[t]);
-                    if (AET[t].yMax == y)
-                        AET.RemoveAt(t--);
-                }
-
-            }
-
-            return points;
-        }
-
-        public static List<Point3D> FillTriange(List<Point3D> vertices)
+        public static List<Point3D> FillTriangle(List<Point3D> vertices)
         {
             var points = new List<Point3D>();
 
-            vertices = vertices.OrderByDescending(x => x.Y).ToList();
+            var p1 = vertices[0];
+            var p2 = vertices[1];
+            var p3 = vertices[2];
 
-            /* here we know that v1.y <= v2.y <= v3.y */
-            /* check for trivial case of bottom-flat triangle */
-            if (vertices[1].Y == vertices[2].Y)
-                points.AddRange(fillBottomFlatTriangle(vertices[0], vertices[1], vertices[2]));
+            // Sorting the points in order to always have this order on screen p1, p2 & p3
+            // with p1 always up (thus having the Y the lowest possible to be near the top screen)
+            // then p2 between p1 & p3
 
-            /* check for trivial case of top-flat triangle */
-            else if (vertices[0].Y == vertices[1].Y)
-                points.AddRange(fillTopFlatTriangle(vertices[0], vertices[1], vertices[2]));
+            if (p1.Y > p2.Y)
+            {
+                var temp = p2;
+                p2 = p1;
+                p1 = temp;
+            }
 
+            if (p2.Y > p3.Y)
+            {
+                var temp = p2;
+                p2 = p3;
+                p3 = temp;
+            }
+
+            if (p1.Y > p2.Y)
+            {
+                var temp = p2;
+                p2 = p1;
+                p1 = temp;
+            }
+
+            // inverse slopes
+            double dP1P2, dP1P3;
+
+            // http://en.wikipedia.org/wiki/Slope
+            // Computing inverse slopes
+            if (p2.Y - p1.Y > 0)
+                dP1P2 = (p2.X - p1.X) / (p2.Y - p1.Y);
+            else
+                dP1P2 = 0;
+
+            if (p3.Y - p1.Y > 0)
+                dP1P3 = (p3.X - p1.X) / (p3.Y - p1.Y);
+            else
+                dP1P3 = 0;
+
+            // First case where triangles are like that:
+            // P1
+            // -
+            // -- 
+            // - -
+            // -  -
+            // -   - P2
+            // -  -
+            // - -
+            // -
+            // P3
+            if (dP1P2 > dP1P3)
+            {
+                for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
+                {
+                    if (y < p2.Y)
+                    {
+                        points.AddRange(ProcessScanLine(y, p1, p3, p1, p2));
+                    }
+                    else
+                    {
+                        points.AddRange(ProcessScanLine(y, p1, p3, p2, p3));
+                    }
+                }
+            }
+            // First case where triangles are like that:
+            //       P1
+            //        -
+            //       -- 
+            //      - -
+            //     -  -
+            // P2 -   - 
+            //     -  -
+            //      - -
+            //        -
+            //       P3
             else
             {
-                double x = (int)(vertices[0].X + ((int)(vertices[1].Y - vertices[0].Y) / (float)(vertices[2].Y - vertices[0].Y)) * (vertices[2].X - vertices[0].X));
-                double z = vertices[0].Z * (1 - (x - vertices[0].X) / (vertices[2].X - vertices[1].X)) + vertices[2].Z * (x - vertices[0].X) / (vertices[2].X - vertices[1].X);
-                Point3D v4 = new Point3D(
-                    x,
-                    vertices[1].Y,
-                    z);
-                points.AddRange(fillBottomFlatTriangle(vertices[0], vertices[1], v4));
-                points.AddRange(fillTopFlatTriangle(vertices[1], v4, vertices[2]));
+                for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
+                {
+                    if (y < p2.Y)
+                    {
+                        points.AddRange(ProcessScanLine(y, p1, p2, p1, p3));
+                    }
+                    else
+                    {
+                        points.AddRange(ProcessScanLine(y, p2, p3, p1, p3));
+                    }
+                }
             }
 
             return points;
         }
 
-        static List<Point3D> fillTopFlatTriangle(Point3D v1, Point3D v2, Point3D v3)
+        static double Clamp(double value, double min = 0, double max = 1)
         {
-            System.Console.WriteLine("Entered Top");
-            List<Point3D> points = new List<Point3D>();
-
-            double invslope1 = (v3.X - v1.X) / (v3.Y - v1.Y);
-            double invslope2 = (v3.X - v2.X) / (v3.Y - v2.Y);
-
-            double curx1 = v3.X;
-            double curx2 = v3.X;
-
-            for (int scanlineY = (int)v3.Y; scanlineY > v1.Y; scanlineY--)
-            {
-                points = Line.GetPoints(new Point3D((int)curx1, scanlineY, 0), new Point3D((int)curx2, scanlineY, 0));
-                curx1 -= invslope1;
-                curx2 -= invslope2;
-            }
-
-            System.Console.WriteLine(points.Count);
-            return points;
+            return Math.Max(min, Math.Min(value, max));
         }
 
-        static List<Point3D> fillBottomFlatTriangle(Point3D v1, Point3D v2, Point3D v3)
+        static double Interpolate(double min, double max, double gradient)
         {
-            System.Console.WriteLine("Entered Bot");
+            return min + (max - min) * Clamp(gradient);
+        }
+
+        static List<Point3D> ProcessScanLine(int y, Point3D pa, Point3D pb, Point3D pc, Point3D pd)
+        {
             var points = new List<Point3D>();
 
-            double invslope1 = (v2.X - v1.X) / (v2.Y - v1.Y);
-            double invslope2 = (v3.X - v1.X) / (v3.Y - v1.Y);
+            var gradient1 = pa.Y != pb.Y ? (y - pa.Y) / (pb.Y - pa.Y) : 1;
+            var gradient2 = pc.Y != pd.Y ? (y - pc.Y) / (pd.Y - pc.Y) : 1;
 
-            double curx1 = v1.X;
-            double curx2 = v1.X;
+            int sx = (int)Interpolate(pa.X, pb.X, gradient1);
+            int ex = (int)Interpolate(pc.X, pd.X, gradient2);
 
-            for (int scanlineY = (int)v1.Y; scanlineY <= v2.Y; scanlineY++)
+            double z1 = Interpolate(pa.Z, pb.Z, gradient1);
+            double z2 = Interpolate(pc.Z, pd.Z, gradient2);
+
+            for (var x = sx; x < ex; x++)
             {
-                points = Line.GetPoints(new Point3D((int)curx1, scanlineY, 0), new Point3D((int)curx2, scanlineY, 0));
-                curx1 += invslope1;
-                curx2 += invslope2;
+                float gradient = (x - sx) / (float)(ex - sx);
+
+                var z = Interpolate(z1, z2, gradient);
+                points.Add(new Point3D(x, y, z));
             }
 
-            System.Console.WriteLine(points.Count);
             return points;
         }
+
     }
 }
