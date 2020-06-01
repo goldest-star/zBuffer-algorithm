@@ -82,13 +82,12 @@ namespace winforms_z_buffer
         {
             var p2D = (Point)point;
 
-            if (zBuffer[p2D] <= point.Z)
+            if (zBuffer[point.X, point.Y] <= point.Z)
                 return;
 
-            zBuffer[p2D] = point.Z;
+            zBuffer[point.X, point.Y] = point.Z;
 
             bmp.SetPixelFast(p2D.X + w.Width / 2, p2D.Y + w.Height / 2, color);
-
         }
     }
 }

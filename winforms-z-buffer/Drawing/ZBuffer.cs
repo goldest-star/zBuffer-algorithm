@@ -19,19 +19,19 @@ namespace winforms_z_buffer
             w = windowSize;
             zBufferMap = new double[windowSize.Width, windowSize.Height];
             for (int i = 0; i < windowSize.Width * windowSize.Height; i++)
-                zBufferMap[i % windowSize.Width, Ut.F(i / windowSize.Width)] = double.MinValue;
+                zBufferMap[i % windowSize.Width, Ut.F(i / windowSize.Width)] = double.MaxValue;
         }
 
         // get: boolean if z is higher or equal to point (=> true = can draw)
         // set: z at point
-        public object this[double x, double y, double z]
+        public double this[double x, double y]
         {
             get
             {
                 x = Ut.F(x) + (w.Width / 2);
                 y = Ut.F(y) + (w.Height / 2);
-                if (x > w.Width - 1 || x < 0 || y < 0 || y > w.Height - 1) return false;
-                return (zBufferMap[Ut.F(x), Ut.F(y)] > z);
+                if (x > w.Width - 1 || x < 0 || y < 0 || y > w.Height - 1) return double.MinValue ;
+                return zBufferMap[Ut.F(x), Ut.F(y)];
             }
             set
             {

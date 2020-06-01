@@ -5,10 +5,27 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace winforms_z_buffer
 {
+    public static class ColorExtensions
+    {
+        public static Color Multiply(this Color color, double factor)
+        {
+            var R = color.R * factor;
+            var B = color.B * factor;
+            var G = color.G * factor;
+
+            R = R > 255 ? 255 : R < 0 ? 0 : R;
+            B = B > 255 ? 255 : B < 0 ? 0 : B;
+            G = G > 255 ? 255 : G < 0 ? 0 : G;
+
+            return Color.FromArgb(Ut.F(R), Ut.F(B), Ut.F(G));
+        }
+    }
+
     public static class IEnumerableExtensions
     {
         public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> self)

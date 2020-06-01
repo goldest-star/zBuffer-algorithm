@@ -25,6 +25,17 @@ namespace winforms_z_buffer
                 ControlStyles.DoubleBuffer,
                 true);
 
+            initializePicturebox();
+
+            initializeCamera();
+
+            initializeCubes();
+
+            OnPaint(null);
+        }
+
+        void initializePicturebox()
+        {
             pb = new PictureBox
             {
                 Name = "pb",
@@ -33,46 +44,46 @@ namespace winforms_z_buffer
                 Dock = DockStyle.Fill
             };
             Controls.Add(pb);
+        }
 
-            // Camera setup
+        void initializeCamera()
+        {
             new Camera(/*fov, near, far : set to default*/);
-
-            initializeCubes();
-
-            OnPaint(null);
         }
 
         void initializeCubes()
         {
+            cubes.Clear();
+
             // Coordinate System Origin
-            CSO = Cube.UnitCube(Color.White, Color.Transparent);
-            CSO.Rescale(0, 0, 0);
+            CSO = Cube.UnitCube(0);
+            CSO.Rescale(0.1, 0.1, 0.1);
             cubes.Add(CSO);
 
             // Cubes
-            Cube c1 = Cube.UnitCube(Color.DarkRed, Color.Red);
+            Cube c1 = Cube.UnitCube(24);
             c1.Rescale(10, 5, 2);
             c1.RotateAroundLocalAxis(0, - Math.PI / 3, - Math.PI / 9);
             c1.Translate(new Vector3D(10, 10, -3));
             cubes.Add(c1);
 
-            Cube c2 = Cube.UnitCube(Color.DarkBlue, Color.Blue);
+            Cube c2 = Cube.UnitCube(51);
             c2.Rescale(5, 5, 5);
             c2.RotateAroundLocalAxis(0, Math.PI / 4, Math.PI / 12);
             c2.Translate(new Vector3D(-10, 5, -2));
             cubes.Add(c2);
 
-            Cube c3 = Cube.UnitCube(Color.DarkGreen, Color.Green);
+            Cube c3 = Cube.UnitCube(69);
             c3.Rescale(15, 1, 1);
             c3.Translate(new Vector3D(0, -15, 0));
             c3.RotateAroundOrigin(Math.PI / 3, Math.PI / 8, 0);
             cubes.Add(c3);
 
-            Cube c4 = Cube.UnitCube(Color.Purple, Color.Magenta);
-            c4.Rescale(15, 15, 15);
-            c4.Translate(new Vector3D(-15, -15, -15));
-            c4.RotateAroundOrigin(Math.PI / 7, 0, Math.PI / 64);
-            cubes.Add(c4);
+            //Cube c4 = Cube.UnitCube(420);
+            //c4.Rescale(15, 15, 15);
+            //c4.Translate(new Vector3D(-15, -15, -15));
+            //c4.RotateAroundOrigin(Math.PI / 7, 0, Math.PI / 64);
+            //cubes.Add(c4);
         }
 
         protected override void OnPaint(PaintEventArgs args)
@@ -119,7 +130,7 @@ namespace winforms_z_buffer
                     break;
                 case (Keys.R | Keys.Control):
                     initializeCubes();
-                    new Camera();
+                    initializeCamera();
                     goto case Keys.R;
 
                 // Translation

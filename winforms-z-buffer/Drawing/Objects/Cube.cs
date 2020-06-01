@@ -12,6 +12,7 @@ namespace winforms_z_buffer
 {
     public class Cube
     {
+        public Color[] Colors = new Color[6];
 
         public Color EdgeColor;
         public Color FaceColor;
@@ -27,33 +28,33 @@ namespace winforms_z_buffer
                 {
                     new Triangle[]
                     {
-                        new Triangle(Vertices[0], Vertices[1], Vertices[2], EdgeColor, FaceColor),
-                        new Triangle(Vertices[1], Vertices[2], Vertices[3], EdgeColor, FaceColor)
+                        new Triangle(Vertices[0], Vertices[1], Vertices[2], EdgeColor, Colors[0]),
+                        new Triangle(Vertices[1], Vertices[2], Vertices[3], EdgeColor, Colors[0])
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[4], Vertices[5], Vertices[6], EdgeColor, FaceColor),
-                        new Triangle(Vertices[5], Vertices[6], Vertices[7], EdgeColor, FaceColor)
+                        new Triangle(Vertices[4], Vertices[5], Vertices[6], EdgeColor, Colors[1]),
+                        new Triangle(Vertices[5], Vertices[6], Vertices[7], EdgeColor, Colors[1])
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[0], Vertices[4], Vertices[1], EdgeColor, FaceColor),
-                        new Triangle(Vertices[5], Vertices[4], Vertices[1], EdgeColor, FaceColor)
+                        new Triangle(Vertices[0], Vertices[4], Vertices[1], EdgeColor, Colors[2]),
+                        new Triangle(Vertices[5], Vertices[4], Vertices[1], EdgeColor, Colors[2])
+                    },                
+                    new Triangle[]
+                    {
+                        new Triangle(Vertices[3], Vertices[5], Vertices[7], EdgeColor, Colors[3]),
+                        new Triangle(Vertices[3], Vertices[5], Vertices[1], EdgeColor, Colors[3])
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[3], Vertices[5], Vertices[7], EdgeColor, FaceColor),
-                        new Triangle(Vertices[3], Vertices[5], Vertices[1], EdgeColor, FaceColor)
+                        new Triangle(Vertices[2], Vertices[6], Vertices[3], EdgeColor, Colors[4]),
+                        new Triangle(Vertices[7], Vertices[6], Vertices[3], EdgeColor, Colors[4])
                     },
                     new Triangle[]
                     {
-                        new Triangle(Vertices[2], Vertices[6], Vertices[3], EdgeColor, FaceColor),
-                        new Triangle(Vertices[7], Vertices[6], Vertices[3], EdgeColor, FaceColor)
-                    },
-                    new Triangle[]
-                    {
-                        new Triangle(Vertices[2], Vertices[6], Vertices[4], EdgeColor, FaceColor),
-                        new Triangle(Vertices[2], Vertices[0], Vertices[4], EdgeColor, FaceColor)
+                        new Triangle(Vertices[2], Vertices[6], Vertices[4], EdgeColor, Colors[5]),
+                        new Triangle(Vertices[2], Vertices[0], Vertices[4], EdgeColor, Colors[5])
                     },
                 };
 
@@ -61,17 +62,22 @@ namespace winforms_z_buffer
             }
         }
 
-        public Cube(Point3D[] vertices, Color eColor, Color fColor)
+        public Cube(Point3D[] vertices, int colorSeed)
         {
             Vertices = vertices;
-            EdgeColor = eColor;
-            FaceColor = fColor;
+            //EdgeColor = eColor;
+            //FaceColor = fColor;
             center = findCenter(vertices);
+
+            Random rnd = new Random(colorSeed);
+
+            for (int i = 0; i < 6; i++)
+                Colors[i] = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
         }
 
         #region statics
 
-        public static Cube UnitCube(Color eColor, Color fColor)
+        public static Cube UnitCube(int colorSeed)
         {
             Point3D[] vertices = {
                 new Point3D(-1, -1, -1), new Point3D(-1, -1, 1), new Point3D(-1, 1, -1),
@@ -79,7 +85,7 @@ namespace winforms_z_buffer
                 new Point3D(1, 1, -1), new Point3D(1, 1, 1)
             };
 
-            return new Cube(vertices, eColor, fColor);
+            return new Cube(vertices, colorSeed);
         }
 
         public static int[][] UnitCubeEdgePairs()
