@@ -10,7 +10,7 @@ namespace winforms_z_buffer
 {
     public class ZBuffer
     {
-        public Dictionary<Point, double> zBufferDict = new Dictionary<Point, double>();
+        // minVal is at the top of the stack
         double[,] zBufferMap;
         Size w;
 
@@ -39,27 +39,10 @@ namespace winforms_z_buffer
             }
         }
 
-        public double this[Point point]
-        {
-            get
-            {
-                if (!zBufferDict.ContainsKey(point))
-                    return double.MaxValue;
-                return zBufferDict[point];
-            }
-            set
-            {
-                if (!zBufferDict.ContainsKey(point))
-                    zBufferDict.Add(point, (double)(value));
-                else
-                    zBufferDict[point] = (double)value;
-            }
-        }
-
         public override string ToString()
-        {
+        {         
             var sb = new StringBuilder();
-
+                                
             for (int i = 0; i < w.Width; i++)
             {
                 for (int j = 0; j < w.Height; j++)

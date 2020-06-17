@@ -30,24 +30,9 @@ namespace winforms_z_buffer
             Vertices[2] += displacement;
         }
 
-        public Point3D[][] GetVertexPairs()
+        Point3D[] getPerspective(Point3D[] set)
         {
-            return createVertexPairs<Point3D>(Vertices);
-        }
-
-        T[][] createVertexPairs<T>(Point3D[] set)
-        {
-            return new T[][]
-            {
-                new T[] { (T)(object)set[0], (T)(object)set[1] },
-                new T[] { (T)(object)set[1], (T)(object)set[2] },
-                new T[] { (T)(object)set[2], (T)(object)set[0] },
-            };
-        }
-        
-        Point3D[] getPerspective(Point3D[] set, int len = 3)
-        {
-            var points = new Point3D[len];
+            var points = new Point3D[set.Length];
 
             foreach (var (v, i) in set.WithIndex())
             {
@@ -55,22 +40,12 @@ namespace winforms_z_buffer
 
                 point.Z += 100;
 
-                Camera.Instance.GetProjectionMatrix().MultiplyAndNormalizePoint(ref point);
+                Camera.Instance.GetProjectionMatrix().MultiplyAndNormalizePoint(ref point); 
 
                 points[i] = (Point3D)point;
             }
 
             return points;
-        }
-
-        public Point[][] TriangleEdgeScreenPointsAsPoint()
-        {
-            return createVertexPairs<Point>(getPerspective(Vertices));
-        }
-
-        public Point3D[][] TriangleEdgeScreenPointsAsPoint3D()
-        {
-            return createVertexPairs<Point3D>(getPerspective(Vertices));
         }
 
         public Point3D[] TriangleVertexScreenPointsAsPoint3D()

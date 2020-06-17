@@ -15,15 +15,7 @@ namespace winforms_z_buffer
 
         public Display()
         {
-            // Setup Winform
-            Width = Height = 800;
-            StartPosition = FormStartPosition.CenterScreen;
-
-            SetStyle(
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.UserPaint |
-                ControlStyles.DoubleBuffer,
-                true);
+            initializeForm();
 
             initializePicturebox();
 
@@ -32,6 +24,18 @@ namespace winforms_z_buffer
             initializeCubes();
 
             OnPaint(null);
+        }
+
+        void initializeForm()
+        {
+            Width = Height = 800;
+            StartPosition = FormStartPosition.CenterScreen;
+
+            SetStyle(
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.UserPaint |
+                ControlStyles.DoubleBuffer,
+                true);
         }
 
         void initializePicturebox()
@@ -56,14 +60,14 @@ namespace winforms_z_buffer
             cubes.Clear();
 
             // Coordinate System Origin
-            CSO = Cube.UnitCube(0);
-            CSO.Rescale(0.1, 0.1, 0.1);
-            cubes.Add(CSO);
+            //CSO = Cube.UnitCube(0);
+            //CSO.Rescale(0.1, 0.1, 0.1);
+            //cubes.Add(CSO);
 
-            // Cubes
+            //Cubes
             Cube c1 = Cube.UnitCube(24);
-            c1.Rescale(10, 5, 2);
-            c1.RotateAroundLocalAxis(0, - Math.PI / 3, - Math.PI / 9);
+            c1.Rescale(2, 2, 2);
+            c1.RotateAroundOrigin(0, -Math.PI / 3, -Math.PI / 9);
             c1.Translate(new Vector3D(10, 10, -3));
             cubes.Add(c1);
 
@@ -74,16 +78,16 @@ namespace winforms_z_buffer
             cubes.Add(c2);
 
             Cube c3 = Cube.UnitCube(69);
-            c3.Rescale(15, 1, 1);
+            c3.Rescale(2, 5, 15);
             c3.Translate(new Vector3D(0, -15, 0));
-            c3.RotateAroundOrigin(Math.PI / 3, Math.PI / 8, 0);
+            c3.RotateAroundOrigin(-Math.PI / 3, Math.PI / 8, -Math.PI / 2);
             cubes.Add(c3);
 
-            //Cube c4 = Cube.UnitCube(420);
-            //c4.Rescale(15, 15, 15);
-            //c4.Translate(new Vector3D(-15, -15, -15));
-            //c4.RotateAroundOrigin(Math.PI / 7, 0, Math.PI / 64);
-            //cubes.Add(c4);
+            Cube c4 = Cube.UnitCube(420);
+            c4.Rescale(3, 3, 3);
+            c4.Translate(new Vector3D(-15, -15, -15));
+            c4.RotateAroundOrigin(Math.PI / 7, 0, Math.PI / 64);
+            cubes.Add(c4);
         }
 
         protected override void OnPaint(PaintEventArgs args)
@@ -119,7 +123,7 @@ namespace winforms_z_buffer
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            double standardSpeed = 1;
+            double standardSpeed = 2;
             double fastSpeed = 10;
             double rotationStep = Math.PI / 64;
 

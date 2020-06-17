@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms.VisualStyles;
 using System.Windows.Media.Media3D;
+using System.Xml.Linq;
 
 namespace winforms_z_buffer
 {
@@ -19,6 +21,52 @@ namespace winforms_z_buffer
 
         public Point3D[] Vertices;
         Point3D center;
+
+        //Vector3D translationVector = new Vector3D(0, 0, 0);
+        //Matrix3D translation
+        //{
+        //    get
+        //    {
+        //        Matrix3D m = Matrix3D.Identity;
+        //        m.Translate(translationVector);
+        //        return m;
+        //    }
+        //}
+
+        //Quaternion rotationQuaternion = new Quaternion(new Vector3D(1, 0, 0), 0);
+        //Matrix3D rotation
+        //{
+        //    get
+        //    {
+        //        Matrix3D m = Matrix3D.Identity;
+        //        m.Rotate(rotationQuaternion);
+        //        return m;
+        //    }
+        //    set { }
+        //}
+
+
+        //Vector3D scaleVector = new Vector3D(1, 1, 1);
+        //Matrix3D scale
+        //{
+        //    get
+        //    {
+        //        return new Matrix3D(
+        //                scaleVector.X, 0, 0, 0,
+        //                0, scaleVector.Y, 0, 0,
+        //                0, 0, scaleVector.Z, 0,
+        //                0, 0, 0, 1
+        //            );
+        //    }
+        //}
+
+        //public ValueTuple<Matrix3D, Matrix3D, Matrix3D> Model
+        //{
+        //    get
+        //    {
+        //        return new ValueTuple<Matrix3D, Matrix3D, Matrix3D>(translation, rotation, scale);
+        //    }
+        //}
 
         public Triangle[][] Sides
         {
@@ -40,7 +88,7 @@ namespace winforms_z_buffer
                     {
                         new Triangle(Vertices[0], Vertices[4], Vertices[1], EdgeColor, Colors[2]),
                         new Triangle(Vertices[5], Vertices[4], Vertices[1], EdgeColor, Colors[2])
-                    },                
+                    },
                     new Triangle[]
                     {
                         new Triangle(Vertices[3], Vertices[5], Vertices[7], EdgeColor, Colors[3]),
@@ -57,7 +105,6 @@ namespace winforms_z_buffer
                         new Triangle(Vertices[2], Vertices[0], Vertices[4], EdgeColor, Colors[5])
                     },
                 };
-
                 return sides;
             }
         }
@@ -109,13 +156,25 @@ namespace winforms_z_buffer
                 Vertices[i] = Vertices[i] + displacement;
 
             center += displacement;
+
+            //translation.Translate(displacement);
+
+           // translationVector += displacement;
         }
 
         public void RotateAroundOrigin(double angleX, double angleY, double angleZ)
         {
+            //rotationQuaternion += new Quaternion(new Vector3D(1, 0, 0), angleX);
+            //rotationQuaternion += new Quaternion(new Vector3D(0, 1, 0), angleY);
+            //rotationQuaternion += new Quaternion(new Vector3D(0, 0, 1), angleZ);
+
             var pitch = angleX;
             var roll = angleY;
             var yaw = angleZ;
+
+            //rotation.Rotate(new Quaternion(new Vector3D(1, 0, 0), angleX));
+            //rotation.Rotate(new Quaternion(new Vector3D(0, 1, 0), angleY));
+            //rotation.Rotate(new Quaternion(new Vector3D(0, 0, 1), angleZ));
 
             var cosa = Math.Cos(yaw);
             var sina = Math.Sin(yaw);
@@ -170,6 +229,7 @@ namespace winforms_z_buffer
                     }
                 }
                 );
+            // scaleVector = new Vector3D(factorX * scaleVector.X, factorY * scaleVector.Y, factorZ * scaleVector.Z);
         }
 
         Point3D findCenter(Point3D[] points)
