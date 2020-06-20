@@ -6,6 +6,8 @@ The below set of combinations of keys and functional keys (shift/ctrl) are used 
 
 Where applicable (in Note column), keys may be modified with the Ctrl key to increase the value of action (ie. `<selected key> + Ctrl` will perfrom the appropriate action with higher value - translation by 10 points instead of 2, etc.)
 
+Objects are always moved with respect to their local axis.
+
 **Screen/Scene Controls**
 | Key(s) | Action | Note |
 | :---   | :---  | :--- |
