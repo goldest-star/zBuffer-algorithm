@@ -19,59 +19,110 @@ namespace winforms_z_buffer
         public Color EdgeColor;
         public Color FaceColor;
 
-        public Point3D[] Vertices;
-        Point3D center;
+        public Point3D[] Vertices; // Model Vertices
 
-        //Vector3D translationVector = new Vector3D(0, 0, 0);
-        //Matrix3D translation
-        //{
-        //    get
-        //    {
-        //        Matrix3D m = Matrix3D.Identity;
-        //        m.Translate(translationVector);
-        //        return m;
-        //    }
-        //}
+        #region model to world operations
 
-        //Quaternion rotationQuaternion = new Quaternion(new Vector3D(1, 0, 0), 0);
-        //Matrix3D rotation
-        //{
-        //    get
-        //    {
-        //        Matrix3D m = Matrix3D.Identity;
-        //        m.Rotate(rotationQuaternion);
-        //        return m;
-        //    }
-        //    set { }
-        //}
+        Vector3D translationVector = new Vector3D(0, 0, 0);
+        Matrix3D translation
+        {
+            get
+            {
+                Matrix3D m = new Matrix3D(
+                    1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    translationVector.X, translationVector.Y, translationVector.Z, 1
+                );
+                return m;
+            }
+        }
 
+        Vector3D rotationOVector = new Vector3D(0, 0, 0);
+        Matrix3D rotationO
+        {
+            get
+            {
+                return getRotationMatrix(rotationOVector);
+            }
+        }
 
-        //Vector3D scaleVector = new Vector3D(1, 1, 1);
-        //Matrix3D scale
-        //{
-        //    get
-        //    {
-        //        return new Matrix3D(
-        //                scaleVector.X, 0, 0, 0,
-        //                0, scaleVector.Y, 0, 0,
-        //                0, 0, scaleVector.Z, 0,
-        //                0, 0, 0, 1
-        //            );
-        //    }
-        //}
+        Vector3D rotationLVector = new Vector3D(0, 0, 0);
+        Matrix3D rotationL
+        {
+            get
+            {
+                return getRotationMatrix(rotationLVector);
+            }
+        }
 
-        //public ValueTuple<Matrix3D, Matrix3D, Matrix3D> Model
-        //{
-        //    get
-        //    {
-        //        return new ValueTuple<Matrix3D, Matrix3D, Matrix3D>(translation, rotation, scale);
-        //    }
-        //}
+        Vector3D scaleVector = new Vector3D(1, 1, 1);
+        Matrix3D scale
+        {
+            get
+            {
+                return new Matrix3D(
+                    scaleVector.X, 0, 0, 0,
+                    0, scaleVector.Y, 0, 0,
+                    0, 0, scaleVector.Z, 0,
+                    0, 0, 0, 1
+                );
+            }
+        }
+
+        public Matrix3D Model
+        {
+            get
+            {
+                return scale * rotationL * translation * rotationO;
+            }
+        }
+
+        Matrix3D getRotationMatrix(Vector3D v)
+        {
+            Matrix3D rX = new Matrix3D(
+                1, 0, 0, 0,
+                0, Math.Cos(v.X), -Math.Sin(v.X), 0,
+                0, Math.Sin(v.X), Math.Cos(v.X), 0,
+                0, 0, 0, 1
+            );
+            Matrix3D rY = new Matrix3D(
+                Math.Cos(v.Y), 0, Math.Sin(v.Y), 0,
+                0, 1, 0, 0,
+                -Math.Sin(v.Y), 0, Math.Cos(v.Y), 0,
+                0, 0, 0, 1
+            );
+            Matrix3D rZ = new Matrix3D(
+                Math.Cos(v.Z), -Math.Sin(v.Z), 0, 0,
+                Math.Sin(v.Z), Math.Cos(v.Z), 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+            );
+
+            return rX * rY * rZ;
+        }
+
+        Point3D[] modelToWorld()
+        {
+            Point3D[] Vertices = new Point3D[this.Vertices.Length];
+            for (int i = 0; i < this.Vertices.Length; i++)
+            {
+                Vertices[i] = this.Vertices[i];
+                Model.MultiplyPoint(ref Vertices[i]);
+            }
+            return Vertices;
+        }
+
+        #endregion
+
+        #region triangles
 
         public Triangle[][] Sides
         {
             get
             {
+                Point3D[] Vertices = modelToWorld();
+
                 var sides = new Triangle[][]
                 {
                     new Triangle[]
@@ -109,20 +160,19 @@ namespace winforms_z_buffer
             }
         }
 
+        #endregion
+
+        #region statics & contructor
+
         public Cube(Point3D[] vertices, int colorSeed)
         {
             Vertices = vertices;
-            //EdgeColor = eColor;
-            //FaceColor = fColor;
-            center = findCenter(vertices);
 
             Random rnd = new Random(colorSeed);
 
             for (int i = 0; i < 6; i++)
                 Colors[i] = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
         }
-
-        #region statics
 
         public static Cube UnitCube(int colorSeed)
         {
@@ -152,109 +202,26 @@ namespace winforms_z_buffer
 
         public void Translate(Vector3D displacement)
         {
-            for (int i = 0; i < 8; i++)
-                Vertices[i] = Vertices[i] + displacement;
-
-            center += displacement;
-
-            //translation.Translate(displacement);
-
-           // translationVector += displacement;
+            translationVector += displacement;
         }
 
         public void RotateAroundOrigin(double angleX, double angleY, double angleZ)
         {
-            //rotationQuaternion += new Quaternion(new Vector3D(1, 0, 0), angleX);
-            //rotationQuaternion += new Quaternion(new Vector3D(0, 1, 0), angleY);
-            //rotationQuaternion += new Quaternion(new Vector3D(0, 0, 1), angleZ);
-
-            var pitch = angleX;
-            var roll = angleY;
-            var yaw = angleZ;
-
-            //rotation.Rotate(new Quaternion(new Vector3D(1, 0, 0), angleX));
-            //rotation.Rotate(new Quaternion(new Vector3D(0, 1, 0), angleY));
-            //rotation.Rotate(new Quaternion(new Vector3D(0, 0, 1), angleZ));
-
-            var cosa = Math.Cos(yaw);
-            var sina = Math.Sin(yaw);
-
-            var cosb = Math.Cos(pitch);
-            var sinb = Math.Sin(pitch);
-
-            var cosc = Math.Cos(roll);
-            var sinc = Math.Sin(roll);
-
-            var Axx = cosa * cosb;
-            var Axy = cosa * sinb * sinc - sina * cosc;
-            var Axz = cosa * sinb * cosc + sina * sinc;
-
-            var Ayx = sina * cosb;
-            var Ayy = sina * sinb * sinc + cosa * cosc;
-            var Ayz = sina * sinb * cosc - cosa * sinc;
-
-            var Azx = -sinb;
-            var Azy = cosb * sinc;
-            var Azz = cosb * cosc;
-
-            for (var i = 0; i < Vertices.Length; i++)
-            {
-                var px = Vertices[i].X;
-                var py = Vertices[i].Y;
-                var pz = Vertices[i].Z;
-
-                Vertices[i].X = Axx * px + Axy * py + Axz * pz;
-                Vertices[i].Y = Ayx * px + Ayy * py + Ayz * pz;
-                Vertices[i].Z = Azx * px + Azy * py + Azz * pz;
-            }
+            rotationOVector.X += angleX;
+            rotationOVector.Y += angleY;
+            rotationOVector.Z += angleZ;
         }
 
         public void RotateAroundLocalAxis(double angleX, double angleY, double angleZ)
         {
-            relativeToOrigin(
-                () => { RotateAroundOrigin(angleX, angleY, angleZ); }
-                );
+            rotationLVector.X += angleX;
+            rotationLVector.Y += angleY;
+            rotationLVector.Z += angleZ;
         }
 
         public void Rescale(double factorX, double factorY, double factorZ)
         {
-            relativeToOrigin(
-                () =>
-                {
-                    for (int i = 0; i < 8; i++)
-                    {
-                        Vertices[i].X *= factorX;
-                        Vertices[i].Y *= factorY;
-                        Vertices[i].Z *= factorZ;
-                    }
-                }
-                );
-            // scaleVector = new Vector3D(factorX * scaleVector.X, factorY * scaleVector.Y, factorZ * scaleVector.Z);
-        }
-
-        Point3D findCenter(Point3D[] points)
-        {
-            double x = 0, y = 0, z = 0;
-
-            foreach (var point in points)
-            {
-                x += point.X;
-                y += point.Y;
-                z += point.Z;
-            }
-
-            return new Point3D(x / points.Length, y / points.Length, z / points.Length);
-        }
-
-        void relativeToOrigin(Action operation)
-        {
-            for (int i = 0; i < 8; i++)
-                Vertices[i] = Vertices[i] - (Vector3D)center;
-
-            operation();
-
-            for (int i = 0; i < 8; i++)
-                Vertices[i] = Vertices[i] + (Vector3D)center;
+            scaleVector = new Vector3D(factorX * scaleVector.X, factorY * scaleVector.Y, factorZ * scaleVector.Z);
         }
 
         #endregion

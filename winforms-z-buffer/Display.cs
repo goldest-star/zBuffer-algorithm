@@ -9,7 +9,7 @@ namespace winforms_z_buffer
     public partial class Display : Form
     {
         List<Cube> cubes = new List<Cube>();
-        Cube CSO;
+        List<Cube> selectedCubes = new List<Cube>();
 
         PictureBox pb;
 
@@ -52,32 +52,27 @@ namespace winforms_z_buffer
 
         void initializeCamera()
         {
-            new Camera(/*fov, near, far : set to default*/);
+            new Camera(/* fov, near, far, aspect ratio */);
         }
 
         void initializeCubes()
         {
             cubes.Clear();
 
-            // Coordinate System Origin
-            //CSO = Cube.UnitCube(0);
-            //CSO.Rescale(0.1, 0.1, 0.1);
-            //cubes.Add(CSO);
-
             //Cubes
-            Cube c1 = Cube.UnitCube(24);
-            c1.Rescale(2, 2, 2);
-            c1.RotateAroundOrigin(0, -Math.PI / 3, -Math.PI / 9);
+            Cube c1 = Cube.UnitCube(42);
+            c1.Rescale(5, 2, 2);
+            c1.RotateAroundLocalAxis(0, -Math.PI / 3, -Math.PI / 9);
             c1.Translate(new Vector3D(10, 10, -3));
             cubes.Add(c1);
 
-            Cube c2 = Cube.UnitCube(51);
+            Cube c2 = Cube.UnitCube(2137);
             c2.Rescale(5, 5, 5);
             c2.RotateAroundLocalAxis(0, Math.PI / 4, Math.PI / 12);
             c2.Translate(new Vector3D(-10, 5, -2));
             cubes.Add(c2);
 
-            Cube c3 = Cube.UnitCube(69);
+            Cube c3 = Cube.UnitCube(1337);
             c3.Rescale(2, 5, 15);
             c3.Translate(new Vector3D(0, -15, 0));
             c3.RotateAroundOrigin(-Math.PI / 3, Math.PI / 8, -Math.PI / 2);
@@ -88,6 +83,14 @@ namespace winforms_z_buffer
             c4.Translate(new Vector3D(-15, -15, -15));
             c4.RotateAroundOrigin(Math.PI / 7, 0, Math.PI / 64);
             cubes.Add(c4);
+
+            Cube c5 = Cube.UnitCube(0);
+            c5.Rescale(0.5, 0.5, 20);
+            c5.Translate(new Vector3D(0, 15, -15));
+            c5.RotateAroundLocalAxis(Math.PI / 7, 0, Math.PI / 64);
+            cubes.Add(c5);
+
+            selectedCubes.AddRange(cubes);
         }
 
         protected override void OnPaint(PaintEventArgs args)
@@ -96,7 +99,7 @@ namespace winforms_z_buffer
             var gr = Graphics.FromImage(bmp);
             gr.Clear(Color.Black);
 
-            var drawing = new Drawing(bmp, Size, /*draw edges*/false, /*draw faces*/true);
+            var drawing = new Drawing(bmp, Size, /*draw faces*/true);
 
             foreach (var c in cubes)
                 drawing.Draw(c);
@@ -104,23 +107,38 @@ namespace winforms_z_buffer
             pb.Image = drawing.GetResult();
         }
 
+        #region shapes control
+
         void TranslateCubes(Vector3D displacement)
         {
-            foreach (var c in cubes)
+            foreach (var c in selectedCubes)
                 c.Translate(displacement);
         }
-
         void ScaleCubes(double factor)
         {
-            foreach (var c in cubes)
+            foreach (var c in selectedCubes)
                 c.Rescale(factor, factor, factor);
         }
-        void RotateCubes(double angleX, double angleY, double angleZ)
+        void RotateCubesAroundOrigin(double angleX, double angleY, double angleZ)
         {
-            foreach (var c in cubes)
+            foreach (var c in selectedCubes)
                 c.RotateAroundOrigin(angleX, angleY, angleZ);
         }
+        void RotateCubesAroundLocal(double angleX, double angleY, double angleZ)
+        {
+            foreach (var c in selectedCubes)
+                c.RotateAroundLocalAxis(angleX, angleY, angleZ);
+        }
 
+        void ChangeSelectedCubes(int index)
+        {
+            selectedCubes.Clear();
+
+            if (index == -1)
+                selectedCubes.AddRange(cubes);
+            else if (index > -1 && index < cubes.Count)
+                selectedCubes.Add(cubes[index]);
+        }
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             double standardSpeed = 2;
@@ -178,43 +196,82 @@ namespace winforms_z_buffer
                     goto case Keys.R;
 
                 // Rotation
-                case Keys.W:
-                    RotateCubes(0, standardSpeed * rotationStep, 0);
-                    goto case Keys.R;
-                case (Keys.W | Keys.Control):
-                    RotateCubes(0, fastSpeed * rotationStep, 0);
-                    goto case Keys.R;
-                case Keys.S:
-                    RotateCubes(0, -standardSpeed * rotationStep, 0);
-                    goto case Keys.R;
-                case (Keys.S | Keys.Control):
-                    RotateCubes(0, -fastSpeed * rotationStep, 0);
-                    goto case Keys.R;
-
                 case Keys.A:
-                    RotateCubes(0, 0, standardSpeed * rotationStep);
+                    RotateCubesAroundOrigin(0, standardSpeed * rotationStep, 0);
                     goto case Keys.R;
                 case (Keys.A | Keys.Control):
-                    RotateCubes(0, 0, fastSpeed * rotationStep);
+                    RotateCubesAroundOrigin(0, fastSpeed * rotationStep, 0);
                     goto case Keys.R;
                 case Keys.D:
-                    RotateCubes(0, 0, -standardSpeed * rotationStep);
+                    RotateCubesAroundOrigin(0, -standardSpeed * rotationStep, 0);
                     goto case Keys.R;
                 case (Keys.D | Keys.Control):
-                    RotateCubes(0, 0, -fastSpeed * rotationStep);
+                    RotateCubesAroundOrigin(0, -fastSpeed * rotationStep, 0);
                     goto case Keys.R;
 
-                case Keys.E:
-                    RotateCubes(standardSpeed * rotationStep, 0, 0);
-                    goto case Keys.R;
-                case (Keys.E | Keys.Control):
-                    RotateCubes(fastSpeed * rotationStep, 0, 0);
-                    goto case Keys.R;
                 case Keys.Q:
-                    RotateCubes(-standardSpeed * rotationStep, 0, 0);
+                    RotateCubesAroundOrigin(0, 0, standardSpeed * rotationStep);
                     goto case Keys.R;
                 case (Keys.Q | Keys.Control):
-                    RotateCubes(-fastSpeed * rotationStep, 0, 0);
+                    RotateCubesAroundOrigin(0, 0, fastSpeed * rotationStep);
+                    goto case Keys.R;
+                case Keys.E:
+                    RotateCubesAroundOrigin(0, 0, -standardSpeed * rotationStep);
+                    goto case Keys.R;
+                case (Keys.E | Keys.Control):
+                    RotateCubesAroundOrigin(0, 0, -fastSpeed * rotationStep);
+                    goto case Keys.R;
+
+                case Keys.S:
+                    RotateCubesAroundOrigin(standardSpeed * rotationStep, 0, 0);
+                    goto case Keys.R;
+                case (Keys.S | Keys.Control):
+                    RotateCubesAroundOrigin(fastSpeed * rotationStep, 0, 0);
+                    goto case Keys.R;
+                case Keys.W:
+                    RotateCubesAroundOrigin(-standardSpeed * rotationStep, 0, 0);
+                    goto case Keys.R;
+                case (Keys.W | Keys.Control):
+                    RotateCubesAroundOrigin(-fastSpeed * rotationStep, 0, 0);
+                    goto case Keys.R;
+
+                case (Keys.A | Keys.Shift):
+                    RotateCubesAroundLocal(0, standardSpeed * rotationStep, 0);
+                    goto case Keys.R;
+                case (Keys.A | Keys.Control | Keys.Shift):
+                    RotateCubesAroundLocal(0, fastSpeed * rotationStep, 0);
+                    goto case Keys.R;
+                case (Keys.D | Keys.Shift):
+                    RotateCubesAroundLocal(0, -standardSpeed * rotationStep, 0);
+                    goto case Keys.R;
+                case (Keys.D | Keys.Control | Keys.Shift):
+                    RotateCubesAroundLocal(0, -fastSpeed * rotationStep, 0);
+                    goto case Keys.R;
+
+                case (Keys.Q | Keys.Shift):
+                    RotateCubesAroundLocal(0, 0, standardSpeed * rotationStep);
+                    goto case Keys.R;
+                case (Keys.Q | Keys.Control | Keys.Shift):
+                    RotateCubesAroundLocal(0, 0, fastSpeed * rotationStep);
+                    goto case Keys.R;
+                case (Keys.E | Keys.Shift):
+                    RotateCubesAroundLocal(0, 0, -standardSpeed * rotationStep);
+                    goto case Keys.R;
+                case (Keys.E | Keys.Control | Keys.Shift):
+                    RotateCubesAroundLocal(0, 0, -fastSpeed * rotationStep);
+                    goto case Keys.R;
+
+                case (Keys.S | Keys.Shift):
+                    RotateCubesAroundLocal(standardSpeed * rotationStep, 0, 0);
+                    goto case Keys.R;
+                case (Keys.S | Keys.Control | Keys.Shift):
+                    RotateCubesAroundLocal(fastSpeed * rotationStep, 0, 0);
+                    goto case Keys.R;
+                case (Keys.W | Keys.Shift):
+                    RotateCubesAroundLocal(-standardSpeed * rotationStep, 0, 0);
+                    goto case Keys.R;
+                case (Keys.W | Keys.Control | Keys.Shift):
+                    RotateCubesAroundLocal(-fastSpeed * rotationStep, 0, 0);
                     goto case Keys.R;
 
                 // Scale
@@ -232,18 +289,49 @@ namespace winforms_z_buffer
                     goto case Keys.R;
 
                 // Camera
-                case Keys.D1:
+                case Keys.O:
                     Camera.Instance.ChangeFOV(Math.PI / 12);
                     goto case Keys.R;
-                case Keys.D2:
+                case Keys.P:
                     Camera.Instance.ChangeFOV(-Math.PI / 12);
+                    goto case Keys.R;
+
+                // Cube selection
+                case Keys.D1:
+                    ChangeSelectedCubes(0);
+                    goto case Keys.R;
+                case Keys.D2:
+                    ChangeSelectedCubes(1);
+                    goto case Keys.R;
+                case Keys.D3:
+                    ChangeSelectedCubes(2);
+                    goto case Keys.R;
+                case Keys.D4:
+                    ChangeSelectedCubes(3);
+                    goto case Keys.R;
+                case Keys.D5:
+                    ChangeSelectedCubes(4);
+                    goto case Keys.R;
+                case Keys.D6:
+                    ChangeSelectedCubes(5);
+                    goto case Keys.R;
+                case Keys.D7:
+                    ChangeSelectedCubes(6);
+                    goto case Keys.R;
+                case Keys.D8:
+                    ChangeSelectedCubes(7);
+                    goto case Keys.R;
+                case Keys.D9:
+                    ChangeSelectedCubes(8);
+                    goto case Keys.R;
+                case Keys.D0:
+                    ChangeSelectedCubes(-1);
                     goto case Keys.R;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-
-
+        #endregion
     }
 }

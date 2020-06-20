@@ -12,42 +12,14 @@ namespace winforms_z_buffer
     {
         public static IEnumerable<Point3D> FillTriangle(List<Point3D> vertices)
         {
-            // var points = new List<Point3D>();
+            vertices.Sort((x, y) => Ut.F(x.Y - y.Y));
 
             var p1 = vertices[0];
             var p2 = vertices[1];
             var p3 = vertices[2];
 
-            // Sorting the points in order to always have this order on screen p1, p2 & p3
-            // with p1 always up (thus having the Y the lowest possible to be near the top screen)
-            // then p2 between p1 & p3
-
-            if (p1.Y > p2.Y)
-            {
-                var temp = p2;
-                p2 = p1;
-                p1 = temp;
-            }
-
-            if (p2.Y > p3.Y)
-            {
-                var temp = p2;
-                p2 = p3;
-                p3 = temp;
-            }
-
-            if (p1.Y > p2.Y)
-            {
-                var temp = p2;
-                p2 = p1;
-                p1 = temp;
-            }
-
-            // inverse slopes
             double dP1P2, dP1P3;
 
-            // http://en.wikipedia.org/wiki/Slope
-            // Computing inverse slopes
             if (p2.Y - p1.Y > 0)
                 dP1P2 = (p2.X - p1.X) / (p2.Y - p1.Y);
             else
@@ -58,17 +30,6 @@ namespace winforms_z_buffer
             else
                 dP1P3 = 0;
 
-            // First case where triangles are like that:
-            // P1
-            // -
-            // -- 
-            // - -
-            // -  -
-            // -   - P2
-            // -  -
-            // - -
-            // -
-            // P3
             if (dP1P2 > dP1P3)
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
@@ -81,17 +42,6 @@ namespace winforms_z_buffer
                             yield return p;
                 }
             }
-            // First case where triangles are like that:
-            //       P1
-            //        -
-            //       -- 
-            //      - -
-            //     -  -
-            // P2 -   - 
-            //     -  -
-            //      - -
-            //        -
-            //       P3
             else
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
@@ -104,8 +54,6 @@ namespace winforms_z_buffer
                             yield return p;
                 }
             }
-
-            // return points;
         }
 
         static double Clamp(double value, double min = 0, double max = 1)
@@ -120,8 +68,6 @@ namespace winforms_z_buffer
 
         static IEnumerable<Point3D> ProcessScanLine(int y, Point3D pa, Point3D pb, Point3D pc, Point3D pd)
         {
-            //var points = new List<Point3D>();
-
             var gradient1 = pa.Y != pb.Y ? (y - pa.Y) / (pb.Y - pa.Y) : 1;
             var gradient2 = pc.Y != pd.Y ? (y - pc.Y) / (pd.Y - pc.Y) : 1;
 
@@ -139,8 +85,13 @@ namespace winforms_z_buffer
                 yield return new Point3D(x, y, z);
             }
 
-            //return points;
-        }
+            for (var x = ex; x < sx; x++)
+            {
+                float gradient = (x - sx) / (float)(ex - sx);
 
+                var z = Interpolate(z1, z2, gradient);
+                yield return new Point3D(x, y, z);
+            }
+        }
     }
 }

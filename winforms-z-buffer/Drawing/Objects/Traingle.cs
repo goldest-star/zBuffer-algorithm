@@ -36,13 +36,11 @@ namespace winforms_z_buffer
 
             foreach (var (v, i) in set.WithIndex())
             {
-                Point4D point = (Point4D)v;
+                points[i] = v;
 
-                point.Z += 100;
+                points[i].Z += 100;
 
-                Camera.Instance.GetProjectionMatrix().MultiplyAndNormalizePoint(ref point); 
-
-                points[i] = (Point3D)point;
+                Camera.Instance.GetProjectionMatrix().MultiplyPoint(ref points[i]);
             }
 
             return points;

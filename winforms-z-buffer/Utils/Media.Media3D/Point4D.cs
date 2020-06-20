@@ -2,11 +2,27 @@
 using System.Windows;
 using System.Windows.Media.Media3D;
 using System;
+using System.Text;
 
 namespace System.Windows.Media.Media3D
 {
     public partial struct Point4D
     {
+        public override string ToString()
+        {
+            var sb = new StringBuilder("[ ");
+            sb.Append(X);
+            sb.Append(" ");
+            sb.Append(Y);
+            sb.Append(" ");
+            sb.Append(Z);
+            sb.Append(" ");
+            sb.Append(W);
+            sb.Append(" ]");
+
+            return sb.ToString();
+        }
+
         //------------------------------------------------------
         //
         //  Constructors

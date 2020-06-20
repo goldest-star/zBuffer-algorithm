@@ -13,7 +13,8 @@ namespace winforms_z_buffer
 
         double fov = Math.PI / 2;
         double near = 0.001;
-        double far = 1000000;
+        double far = 10000;
+        double aspect = 1;
 
         public Camera(double fov, double near, double far) : this()
         {
@@ -27,10 +28,10 @@ namespace winforms_z_buffer
         public Matrix3D GetProjectionMatrix()
         {
             double fn = far - near;
-            double fovRad = 1 / Math.Tan(fov * 0.5);
+            double fovRad = 1 / Math.Tan(fov / 2);
 
             Matrix3D matrix = new Matrix3D(
-                    fovRad, 0, 0, 0,
+                    aspect * fovRad, 0, 0, 0,
                     0, fovRad, 0, 0,
                     0, 0, far / fn, -far * near / fn,
                     0, 0, 1, 0

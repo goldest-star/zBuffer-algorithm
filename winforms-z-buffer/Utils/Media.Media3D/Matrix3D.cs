@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 
 namespace System.Windows.Media.Media3D
 {
@@ -16,9 +17,52 @@ namespace System.Windows.Media.Media3D
                 point.X /= point.W;
                 point.Y /= point.W;
                 point.Z /= point.W;
+                // point.W /= point.W;
             }
         }
 
+        public override string ToString()
+        {
+            var sb = new StringBuilder("[ ");
+            
+            sb.Append(M11);
+            sb.Append(" ");
+            sb.Append(M12);
+            sb.Append(" ");
+            sb.Append(M13);
+            sb.Append(" ");
+            sb.Append(M14);
+            sb.Append("\n  ");
+
+            sb.Append(M21);
+            sb.Append(" ");
+            sb.Append(M22);
+            sb.Append(" ");
+            sb.Append(M23);
+            sb.Append(" ");
+            sb.Append(M24);
+            sb.Append("\n  ");
+
+            sb.Append(M31);
+            sb.Append(" ");
+            sb.Append(M32);
+            sb.Append(" ");
+            sb.Append(M33);
+            sb.Append(" ");
+            sb.Append(M34);
+            sb.Append("\n  ");
+
+            sb.Append(OffsetX);
+            sb.Append(" ");
+            sb.Append(OffsetY);
+            sb.Append(" ");
+            sb.Append(OffsetZ);
+            sb.Append(" ");
+            sb.Append(M44);
+            sb.Append(" ]");
+
+            return sb.ToString();
+        }
 
         //------------------------------------------------------
         //

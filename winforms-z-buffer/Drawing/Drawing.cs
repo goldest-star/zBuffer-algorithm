@@ -13,27 +13,15 @@ namespace winforms_z_buffer
     public class Drawing
     {
         ZBuffer zBuffer;
-        Graphics graphics;
         Bitmap bmp;
 
         Size w;
-
-        bool drawBorders;
         bool drawFill;
 
-        public Drawing(Graphics g, Size windowSize, bool drawBorders, bool drawFill)
-        {
-            graphics = g;
-            zBuffer = new ZBuffer(windowSize);
-            this.drawBorders = drawBorders;
-            this.drawFill = drawFill;
-            w = windowSize;
-        }
-        public Drawing(Bitmap bmp, Size windowSize, bool drawBorders, bool drawFill)
+        public Drawing(Bitmap bmp, Size windowSize, bool drawFill)
         {
             this.bmp = bmp;
             zBuffer = new ZBuffer(windowSize);
-            this.drawBorders = drawBorders;
             this.drawFill = drawFill;
             w = windowSize;
         }
@@ -49,25 +37,12 @@ namespace winforms_z_buffer
 
         public void DrawTriangle(Triangle t)
         {
-            if (!drawFill && !drawBorders)
+            if (!drawFill)
                 return;
 
             var points = t.TriangleVertexScreenPointsAsPoint3D();
 
-            if (drawFill)
-                drawTriangleFill(points, t.FaceColor);
-
-            if (drawBorders)
-                drawTriangleEdges(points, t.EdgeColor);
-        }
-
-        void drawTriangleEdges(Point3D[] vertices, Color color)
-        {
-            var points = new List<Point3D> { vertices[0], vertices[1], vertices[2] };
-
-
-            foreach (var p in Line.OutlineTriangle(points))
-                drawPoint(p, color);
+            drawTriangleFill(points, t.FaceColor);
         }
 
         void drawTriangleFill(Point3D[] vertices, Color color)
