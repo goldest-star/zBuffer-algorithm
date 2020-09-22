@@ -1,4 +1,4 @@
-# Winforms Z Buffer Project
+# C# z-buffer Project
 
 ## Control Set
 
