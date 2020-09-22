@@ -1,5 +1,9 @@
 # C# z-buffer Project
 
+## Introduction
+
+This project uses C# (and winforms) to present a basic approach to the z-buffer rendering algorithm ([wikipedia](https://en.wikipedia.org/wiki/Z-buffering)) for objects in 3D space.
+
 ## Control Set
 
 The below set of combinations of keys and functional keys (shift/ctrl) are used to control the simulation.
