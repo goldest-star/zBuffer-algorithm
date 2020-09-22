@@ -8,9 +8,23 @@ The application allows stacking of various objects
 
 ![alt text](https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.png)
 
-And moving objects around the scene (controls in next section)
+And moving objects around the scene
 
 ![alt text](https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.gif)
+
+## Application Overview
+
+The winforms main window is `Display.cs`. Cubes are added and defined in `initializeCubes()`. A cube is added in the following way:
+
+```csharp
+Cube c3 = Cube.UnitCube(1337); // Create a unit cube with color seed (int)
+c3.Rescale(2, 5, 15); // Rescale on x, y and z dimensions
+c3.Translate(new Vector3D(0, -15, 0)); // Set offset
+c3.RotateAroundOrigin(-Math.PI / 3, Math.PI / 8, -Math.PI / 2); // Rotate with respect to/anchored in Origin point (0, 0, 0)
+cubes.Add(c3); // Add the cube to list of cubes
+```
+
+`Drawing.cs` is the master class used for z-buffer rendering and `ZBuffer.cs` is used to store z-indicies of the projected points. Points are drawn to a bitmap with an extension method which directly writes to memory for better performance. 
 
 ## Control Set
 
