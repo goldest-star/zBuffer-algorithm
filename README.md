@@ -4,6 +4,14 @@
 
 This project uses C# (and winforms) to present a basic approach to the z-buffer rendering algorithm ([wikipedia](https://en.wikipedia.org/wiki/Z-buffering)) for objects in 3D space.
 
+The application allows stacking of various objects
+
+![alt text](https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.png)
+
+And moving objects around the scene (controls in next section)
+
+![alt text](https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.gif)
+
 ## Control Set
 
 The below set of combinations of keys and functional keys (shift/ctrl) are used to control the simulation.
