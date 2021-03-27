@@ -1,4 +1,4 @@
-# C# z-buffer Project
+# Tackling the z-buffer algorithm with C#
 
 ## Introduction
 
@@ -6,11 +6,15 @@ This project uses C# (and winforms) to present a basic approach to the z-buffer 
 
 The application allows stacking of various objects
 
-![alt text](https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.png">
+</p>
 
 And moving objects around the scene
 
-![alt text](https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.gif)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/julzerinos/csharp-zBuffer-algorithm/assets/sceneview.gif">
+</p>
 
 ## Application Overview
 
